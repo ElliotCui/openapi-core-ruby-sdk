@@ -7,6 +7,15 @@ module AliyunSDKCore
 
   class RPCClient
 
+    class ResponseError < StandardError
+      attr_accessor :res
+
+      def initialize(message, res)
+        @res = res
+        super(message)
+      end
+    end
+
     attr_accessor :endpoint, :api_version, :access_key_id, :access_key_secret, :security_token, :codes, :opts, :verbose
 
     def initialize(config, verbose = false)
@@ -51,8 +60,9 @@ module AliyunSDKCore
       end
 
       response_body = JSON.parse(response.body)
+
       if response_body['Code'] && !self.codes.include?(response_body['Code'])
-        raise StandardError, "#{response_body['Message']}, URL: #{uri}"
+        raise ResponseError.new("#{response_body['Message']}, URL: #{uri}", response_body)
       end
 
       response_body
